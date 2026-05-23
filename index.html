@@ -16,7 +16,7 @@
 
         body {
             background-color: #ffffff;
-            height: 100vh;
+            height: 100dvh;
             width: 100vw;
             display: flex;
             overflow: hidden;
@@ -382,17 +382,13 @@
             userInput.value = '';
             sendBtn.classList.remove('active');
 
-            // Verifica seus filtros locais primeiro
             const responseLocal = processBotResponse(text);
 
-            // Se a resposta veio dos seus filtros (xingamento, saudação ou história), exibe direto
             if (!responseLocal.includes("está processando o resultado real...")) {
                 setTimeout(() => {
                     appendMessage(responseLocal, 'genius');
                 }, 400);
             } else {
-                // Caso contrário, cria o balão e chama a API real do seu Termux
-                // Criamos o balão vazio da IA primeiro
                 const msgDiv = document.createElement('div');
                 msgDiv.classList.add('message', 'genius');
                 const textDiv = document.createElement('div');
@@ -402,7 +398,6 @@
                 chatHistory.appendChild(msgDiv);
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
-                // Faz a chamada para a sua API local no celular
                 fetch('http://localhost:11434/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -414,7 +409,6 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-                    // Coloca o texto que a IA gerou dentro do balão criado
                     textDiv.innerText = data.response;
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                 })
@@ -438,7 +432,6 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
 
-        // Seu sistema central de filtros idêntico ao original
         function processBotResponse(msg) {
             const lowerMsg = msg.toLowerCase().trim();
 
