@@ -382,38 +382,47 @@
             userInput.value = '';
             sendBtn.classList.remove('active');
 
-            const localResponse = processBotResponse(text);
+            // Verifica seus filtros locais primeiro
+            const responseLocal = processBotResponse(text);
 
-            if (!localResponse.includes("está processando o resultado real...")) {
+            // Se a resposta veio dos seus filtros (xingamento, saudação ou história), exibe direto
+            if (!responseLocal.includes("está processando o resultado real...")) {
                 setTimeout(() => {
-                    appendMessage(localResponse, 'genius');
+                    appendMessage(responseLocal, 'genius');
                 }, 400);
-                return;
-            }
-
-            const geniusMessageDiv = appendMessage("Thinking...", 'genius');
-            const messageTextElement = geniusMessageDiv.querySelector('.message-text');
-
-            fetch('http://localhost:11434/api/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'qwen2.5:1.5b',
-                    prompt: text,
-                    stream: false
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                messageTextElement.innerText = data.response;
+            } else {
+                // Caso contrário, cria o balão e chama a API real do seu Termux
+                // Criamos o balão vazio da IA primeiro
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message', 'genius');
+                const textDiv = document.createElement('div');
+                textDiv.classList.add('message-text');
+                textDiv.innerText = "Processando...";
+                msgDiv.appendChild(textDiv);
+                chatHistory.appendChild(msgDiv);
                 chatHistory.scrollTop = chatHistory.scrollHeight;
-            })
-            .catch(error => {
-                messageTextElement.innerText = "Error: Make sure Termux is active and running with OLLAMA_ORIGINS='*'.";
-                console.error(error);
-            });
+
+                // Faz a chamada para a sua API local no celular
+                fetch('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'qwen2.5:1.5b',
+                        prompt: text,
+                        stream: false
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Coloca o texto que a IA gerou dentro do balão criado
+                    textDiv.innerText = data.response;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                })
+                .catch(err => {
+                    textDiv.innerText = "Erro: Ligue o Termux com OLLAMA_ORIGINS='*'.";
+                    console.error(err);
+                });
+            }
         }
 
         function appendMessage(text, sender) {
@@ -427,10 +436,9 @@
             msgDiv.appendChild(textDiv);
             chatHistory.appendChild(msgDiv);
             chatHistory.scrollTop = chatHistory.scrollHeight;
-            
-            return msgDiv;
         }
 
+        // Seu sistema central de filtros idêntico ao original
         function processBotResponse(msg) {
             const lowerMsg = msg.toLowerCase().trim();
 
