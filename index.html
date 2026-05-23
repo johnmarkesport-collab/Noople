@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Genius Enterprise UI</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
@@ -14,12 +14,16 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        html, body {
             background-color: #ffffff;
-            height: 100dvh;
+            /* height dinâmico corrige o corte do Google Chrome mobile */
+            height: 100dvh; 
             width: 100vw;
-            display: flex;
             overflow: hidden;
+        }
+
+        body {
+            display: flex;
         }
 
         /* BARRA LATERAL FIXA */
@@ -382,41 +386,10 @@
             userInput.value = '';
             sendBtn.classList.remove('active');
 
-            const responseLocal = processBotResponse(text);
-
-            if (!responseLocal.includes("está processando o resultado real...")) {
-                setTimeout(() => {
-                    appendMessage(responseLocal, 'genius');
-                }, 400);
-            } else {
-                const msgDiv = document.createElement('div');
-                msgDiv.classList.add('message', 'genius');
-                const textDiv = document.createElement('div');
-                textDiv.classList.add('message-text');
-                textDiv.innerText = "Processando...";
-                msgDiv.appendChild(textDiv);
-                chatHistory.appendChild(msgDiv);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
-
-                fetch('http://localhost:11434/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'qwen2.5:1.5b',
-                        prompt: text,
-                        stream: false
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    textDiv.innerText = data.response;
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                })
-                .catch(err => {
-                    textDiv.innerText = "Erro: Ligue o Termux com OLLAMA_ORIGINS='*'.";
-                    console.error(err);
-                });
-            }
+            setTimeout(() => {
+                const response = processBotResponse(text);
+                appendMessage(response, 'genius');
+            }, 600);
         }
 
         function appendMessage(text, sender) {
@@ -435,6 +408,7 @@
         function processBotResponse(msg) {
             const lowerMsg = msg.toLowerCase().trim();
 
+            // 1. FILTRO DE HOSTILIDADE / XINGAMENTOS
             const xingamentosDiretos = ['vai tomar no seu cu', 'vai tomar no cu', 'filha da puta', 'filho da puta', 'animal', 'desgraçado', '🖕'];
             let ehAgressaoAtiva = xingamentosDiretos.some(ofensa => lowerMsg.includes(ofensa));
             
@@ -445,11 +419,13 @@
                 return "Desculpe, eu sei que você está irritado, mas sou uma Inteligência Artificial para ajudar empresários e empreendedores sérios e focados. Vamos ao que interessa, como posso te ajudar hoje?";
             }
 
+            // 2. FILTRO DE SAUDAÇÕES
             const saudacoes = ['olá', 'ola', 'tudo bem', 'bom dia', 'boa tarde', 'boa noite', 'fala', 'opa', 'tbm', 'fala mano'];
             if (saudacoes.includes(lowerMsg) || lowerMsg === 'ola' || lowerMsg === 'ola tudo bem') {
                 return "Olá, como está? Qual vai ser o primeiro passo de hoje?";
             }
 
+            // 3. FILTRO DE HISTÓRIA / ORIGEM
             const perguntasHistoria = [
                 'qual é sua história', 'qual e sua historia', 'sua historia', 'sua história',
                 'como você foi criado', 'como voce foi criado', 'quem te criou', 'quem te desenvolveu',
