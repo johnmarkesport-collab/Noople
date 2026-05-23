@@ -386,10 +386,43 @@
             userInput.value = '';
             sendBtn.classList.remove('active');
 
-            setTimeout(() => {
-                const response = processBotResponse(text);
-                appendMessage(response, 'genius');
-            }, 600);
+            const responseLocal = processBotResponse(text);
+
+            // Se cair em um filtro de texto fixo local seu, exibe direto sem chamar API
+            if (!responseLocal.includes("está processando o resultado real...")) {
+                setTimeout(() => {
+                    appendMessage(responseLocal, 'genius');
+                }, 400);
+            } else {
+                // Se precisar de inteligência real, cria o balão de processamento e bate na API do Termux
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message', 'genius');
+                const textDiv = document.createElement('div');
+                textDiv.classList.add('message-text');
+                textDiv.innerText = "Pensando...";
+                msgDiv.appendChild(textDiv);
+                chatHistory.appendChild(msgDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                fetch('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'qwen2.5:1.5b',
+                        prompt: text,
+                        stream: false
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    textDiv.innerText = data.response;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                })
+                .catch(err => {
+                    textDiv.innerText = "Erro: certifique-se de que o Termux está rodando com OLLAMA_ORIGINS='*'";
+                    console.error(err);
+                });
+            }
         }
 
         function appendMessage(text, sender) {
