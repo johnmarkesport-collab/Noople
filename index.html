@@ -402,7 +402,6 @@
                 chatHistory.appendChild(msgDiv);
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
-                // Alterado de localhost para o IP 127.0.0.1 para contornar o bloqueio do Chrome
                 fetch('http://127.0.0.1:11434/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -440,7 +439,6 @@
         function processBotResponse(msg) {
             const lowerMsg = msg.toLowerCase().trim();
 
-            // 1. FILTRO DE HOSTILIDADE / XINGAMENTOS
             const xingamentosDiretos = ['vai tomar no seu cu', 'vai tomar no cu', 'filha da puta', 'filho da puta', 'animal', 'desgraçado', '🖕'];
             let ehAgressaoAtiva = xingamentosDiretos.some(ofensa => lowerMsg.includes(ofensa));
             
@@ -451,13 +449,11 @@
                 return "Desculpe, eu sei que você está irritado, mas sou uma Inteligência Artificial para ajudar empresários e empreendedores sérios e focados. Vamos ao que interessa, como posso te ajudar hoje?";
             }
 
-            // 2. FILTRO DE SAUDAÇÕES
             const saudacoes = ['olá', 'ola', 'tudo bem', 'bom dia', 'boa tarde', 'boa noite', 'fala', 'opa', 'tbm', 'fala mano'];
             if (saudacoes.includes(lowerMsg) || lowerMsg === 'ola' || lowerMsg === 'ola tudo bem') {
                 return "Olá, como está? Qual vai ser o primeiro passo de hoje?";
             }
 
-            // 3. FILTRO DE HISTÓRIA / ORIGEM
             const perguntasHistoria = [
                 'qual é sua história', 'qual e sua historia', 'sua historia', 'sua história',
                 'como você foi criado', 'como voce foi criado', 'quem te criou', 'quem te desenvolveu',
